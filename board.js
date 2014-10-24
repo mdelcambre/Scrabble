@@ -5,7 +5,7 @@
  *
  */
 
-var transpose = require('math.js').transpose;
+var transpose = require('mathjs').transpose;
 
 
 module.exports = function (json_board) {
@@ -16,45 +16,60 @@ module.exports = function (json_board) {
   // The alogrithm is written to only solves horizontal, instead of having it
   // handle vertical, we simple transpose the board and run again.
   this.flip = function () {
-      flipped = !flipped;
-      tiles = transpose(letters);
-      return flipped;
+      this.flipped = !this.flipped;
+      this.tiles = transpose(this.tiles);
+      return this.flipped;
   }
 
 
   // Used to get the current tile at a given spot on the board
   // Also checks if the pos is out of bounds
   this.GetChar = function (r,c,pos) {
-    if (ValidLoc(r,c,pos) === 'IB') {
-      return board[r][c+pos];
+    if (this.ValidLoc(r,c,pos)) {
+      return this.tiles[r][c+pos];
     }
     return 'OOB';
   }//GetChar
 
 
-  this.GetUp = funciton (r,c,pos) {
-    //returns the word above
+  // returns the complete word up from the given position
+  this.GetUp = function (r,c,pos) {
+    var word = '';
+    var up = this.GetChar(r-1, c, pos);
+    var noTile = (up === 'OOB' || up === '');
+    if (noTile) {
+      return '';
+    }
+    return this.GetUp(r-1, c, pos) + up;
   }
 
+
+  // returns the complete word down from the given position
   this.GetDown = function (r,c,pos){
-    //returs the word below
+    var down = this.GetChar(r+1, c, pos);
+    var noTile = (down === 'OOB' || down === '');
+    if (noTile) {
+      return '';
+    }
+    return down + this.GetDown(r+1, c, pos);
   }
+    //returs the word below
 
 
   this.GetAnchor = function (r) {
-    if (ValidLoc(r,0,0) === 'OOB'){
+    if (!this.ValidLoc(r,0,0)){
       return 'OOB';
     }
     var anchors = [];
     // itterate through the row, to check if it is an anchor location
-    for (c=0; c < board[r].length; c++) {
+    for (c=0; c < this.tiles[r].length; c++) {
 
       // Get each tile space in a + shape.
-      var spot = GetChar(r,c,0);
-      var up = GetChar(r-1,c,0);
-      var down = GetChar(r+1,c,0);
-      var back = GetChar(r,c-1,0);
-      var oneFwd = GetChar(r,c+1,0);
+      var spot = this.GetChar(r,c,0);
+      var up = this.GetChar(r-1,c,0);
+      var down = this.GetChar(r+1,c,0);
+      var back = this.GetChar(r,c-1,0);
+      var oneFwd = this.GetChar(r,c+1,0);
 
       // Can't be an anchor location if it isn't blank
       // however, the algorithm below will miss one anchor type when the
@@ -64,8 +79,8 @@ module.exports = function (json_board) {
       } else if ( spot != '' && oneFwd === 'OOB') {
         // We know the last row spot has been placed, so go backwards till we
         // find the first blank. That is an anchor spot as well.
-        for (gb = board[r].length-1; gb >= 0; gb--){
-          if (GetChar(r,gb,0) === ''){
+        for (gb = this.tiles[r].length-1; gb >= 0; gb--){
+          if (this.GetChar(r,gb,0) === ''){
             anchors.push(gb);
             break;
           }
@@ -81,6 +96,7 @@ module.exports = function (json_board) {
       var noFwd = (oneFwd === 'OOB' || oneFwd === '')
       if (charAdj && noFwd){
         anchors.push(c);
+        c++;
       }
     }//for loop going through row forward
     return anchors;
@@ -88,14 +104,9 @@ module.exports = function (json_board) {
 
   // Checks if the passed in anchor and position is valid
   this.ValidLoc = function (r, c, pos) {
-    var invalid = (r < 0 || r >= board.length) ||
-                  (c+pos < 0 || c+pos >= board[r].length);
-    if (invalid) {
-      return 'OOB';
-    } else {
-      return 'IB';
-    }
-
+    var invalid = (r < 0 || r >= this.tiles.length) ||
+                  (c+pos < 0 || c+pos >= this.tiles[r].length);
+    return !invalid;
   }//ValidLoc
 
 }
