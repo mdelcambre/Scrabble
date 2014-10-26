@@ -6,11 +6,61 @@
  */
 
 var transpose = require('mathjs').transpose;
-
+var b_value = [[1, 1, 1, '3', 1, 1, 3, 1, 3, 1, 1, '3', 1, 1, 1],
+             [1, 1, 2, 1, 1, '2', 1, 1, 1, '2', 1, 1, 2, 1, 1],
+             [1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1],
+             ['3', 1, 1, 3, 1, 1, 1, '2', 1, 1, 1, 3, 1, 1, '3'],
+             [1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1],
+             [1, '2', 1, 1, 1, 3, 1, 1, 1, 3, 1, 1, 1, '2', 1],
+             [3, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 3],
+             [1, 1, 1, '2', 1, 1, 1, 1, 1, 1, 1,'2', 1, 1, 1],
+             [3, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 3],
+             [1, '2', 1, 1, 1, 3, 1, 1, 1, 3, 1, 1, 1, '2', 1],
+             [1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1],
+             ['3', 1, 1, 3, 1, 1, 1, '2', 1, 1, 1, 3, 1, 1, '3'],
+             [1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1],
+             [1, 1, 2, 1, 1, '2', 1, 1, 1, '2', 1, 1, 2, 1, 1],
+             [1, 1, 1, '3', 1, 1, 3, 1, 3, 1, 1, '3', 1, 1, 1]];
+var t_value = {' ':0,
+                A:1,
+                B:4,
+                C:4,
+                D:2,
+                E:1,
+                F:4,
+                G:3,
+                H:3,
+                I:1,
+                J:10,
+                K:5,
+                L:2,
+                M:4,
+                N:2,
+                O:1,
+                P:4,
+                Q:10,
+                R:1,
+                S:1,
+                T:1,
+                U:2,
+                V:5,
+                W:4,
+                X:8,
+                Y:3,
+                Z:10};
 
 module.exports = function (json_board) {
   this.tiles = json_board;
   this.flipped = false;
+
+  // 
+  this.value = function (r,c,word,blanks) {
+    var letters = word.s.split("");
+    
+    
+    return true;
+  }
+
 
 
   // The alogrithm is written to only solves horizontal, instead of having it
@@ -53,9 +103,10 @@ module.exports = function (json_board) {
     }
     return down + this.GetDown(r+1, c, pos);
   }
-    //returs the word below
 
-
+  // This furnction returns a list anchor locations for a given row.
+  // Anchor locations are defined by a free space in the current squar and
+  // one to the right. Then need at least one tile up, left, or down.
   this.GetAnchor = function (r) {
     if (!this.ValidLoc(r,0,0)){
       return 'OOB';
