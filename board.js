@@ -53,13 +53,34 @@ module.exports = function (json_board) {
   this.tiles = json_board;
   this.flipped = false;
 
-  // 
-  this.value = function (r,c,word,blanks) {
-    var letters = word.s.split("");
-    
-    
-    return true;
-  }
+  // This function returns the cross value of placing a letter at a given location
+  this.XValue = function (r,c,pos,letter) {
+    // Check if the location is valid
+    if (this.ValidLoc(r,c,pos)) {
+      return 'OOB';
+    }
+
+    // Should be upper case for key. Might as well check.
+    letter = letter.toUpperCase();
+
+    // generate an array of letter above and below
+    var cross = this.GetUp(r,c,pos)).split('').concat(this.GetDown(r,c,pos).split(''));
+
+    // calculate the value of the cross characters using the lookup dict defined above
+    var value = cross.reduce(function(prev,cur){
+      return prev + t_value[cur];
+    }
+
+    // get the multiplier from the letter placement
+    var space = b_value[r][c+pos];
+
+    // Check if word multiplier or just letter multiplier
+    // We store word multipliers as ints 
+    if (typeof space === 'string'){
+      value = value*parseInt(space);
+    }
+    return value;
+  } // XValue
 
 
 
