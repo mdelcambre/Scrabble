@@ -52,11 +52,12 @@ var t_value = {' ':0,
 module.exports = function (json_board) {
   this.tiles = json_board;
   this.flipped = false;
+  this.ltr_value = t_value;
 
   // This function returns the cross value of placing a letter at a given location
-  this.XValue = function (r,c,pos,letter) {
+  this.GetValue = function (r,c,pos,letter) {
     // Check if the location is valid
-    if (this.ValidLoc(r,c,pos)) {
+    if (!this.ValidLoc(r,c,pos)) {
       return 'OOB';
     }
 
@@ -64,8 +65,9 @@ module.exports = function (json_board) {
     letter = letter.toUpperCase();
 
     // generate an array of letter above and below
-    var cross = this.GetUp(r,c,pos)).split('').concat(this.GetDown(r,c,pos).split(''));
-
+    var cross = this.GetUp(r,c,pos)).split('')
+                .concat(this.GetDown(r,c,pos).split(''));
+                .push(letter)
     // calculate the value of the cross characters using the lookup dict defined above
     var value = cross.reduce(function(prev,cur){
       return prev + t_value[cur];
@@ -79,10 +81,20 @@ module.exports = function (json_board) {
     if (typeof space === 'string'){
       value = value*parseInt(space);
     }
-    return value;
+    return value+;
   } // XValue
+  this.WordMult = function (r,c,pos){
+    // Check if the location is valid
+    if (!this.ValidLoc(r,c,pos)) {
+      return 'OOB';
+    }
 
-
+    var space = b_value[r][c+pos]; 
+    if (typeof space === 'string'){
+      return parseInt(space)-1;
+    }
+    return 0;
+  }
 
   // The alogrithm is written to only solves horizontal, instead of having it
   // handle vertical, we simple transpose the board and run again.

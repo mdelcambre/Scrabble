@@ -32,8 +32,8 @@ function load_first(){
 //
 function NextArc(arc, l){
   if(arc){
-    if (arc['edges'][l])return arc['edges'][l];i
-    return null;
+    if (arc['edges'][l])return arc['edges'][l];
+    return false;
   } else {
     return gd.get(l);
   }
@@ -44,10 +44,33 @@ function NextArc(arc, l){
 // Helper function to determine which letters are valid based on the surronding board
 // Called with the origin and horizontal offset, returns an array of valid tiles
 // board up / down
+function CrossCheck(r,c,pos){
+  var arc = null;
+  var up = board.GetUp(r,c,pos);
+  var down = board.GetDown(r,c,pos);
+  if (!up && !down){
+    return '';
+  }
 
+  if (up XOR down){
+    word = (up+down).split('');
 
-
-
+    for (i=0; i<word.length; i++){
+      arc = NextArc(arc, word[i]);
+      if (!arc) return false;
+    }
+    if (up) {
+      // ITERATE THROUGH EGES;
+      return ; // letters
+    }
+    arc = NextArc(arc,'_');
+    if (down && arc) {
+      // ITTERATE THROUGH EDGES
+      return; // letters
+    }
+    return '';
+  }
+  
 }//function CrossCheck
                                                
 
@@ -59,60 +82,97 @@ function NextArc(arc, l){
 // and the current node in the GADDAG
 // operates on the 
 //
-function Gen(origin, pos, word, hand, arc){
-  if ((origin[0] < 0 || origin[0] >= board.length) ||
-    (origin[1]+pos < 0 || origin[1]+pos >= board[origin[0]].length)){
-    return
+function Gen(r,c, pos, word, value, mult, hand, arc){
+  // Get the current board location. If it is Out of Bounds, we're done.
+  // if it has a letter, call GoOn with that letter.
+  // Otherwise generate new move based on the hand.
+  var bl = board.GetChar(r,c,pos)
+  if (bl === 'OOB'){
+    return false;
+  } else if (bl !== '') {
+    GoOn(r, c, pos, bl, word, value, mult, hand, NextArc(arc,bl), 'on board');
   }
-  // Store the current board letter
-//  bl = board[origin[0],origin[1]+pos]
-//  if(bl){ // Check if the current spot has a letter,
-//     GoOn(origin,pos,word,hand,arc[bl][edges],arc);
-//  } else {
-//  // No letter currently in this position, compute the valid plays
-//  //based on letters in the hand and the surrounding board 
-//  letters = _.intersection(crosscheck(origin,pos),hand);
-  var letters = hand;
-  letters.forEach(function(l,i,letters){ // letter, index, array
-    var a = letters.slice(); // pass by value
+
+  // Next, to generate our move based on tiles in our hand, we need to generate
+  // all valid letters to place on a given board location based on the letters
+  // above or below the tile. before or after will be handled by Gen/GoOn
+  // function, as we inteliginetly pick our anchor locations.
+  var x_letters = CrossCheck(r,c,pos);
+  // If we have restrictions from the crosscheck, generate the list of possible
+  // letters we can play based on the board and hand.
+  // Crosscheck will hand back a null if there are no restrictions. In that case
+  // the valid letters will be whatever is in the hand.
+  //
+  if (x_letters){
+    var letters = _.intersection(x_letters,hand);
+  } else {
+    var letters = hand;
+  }
+
+  // Itterate over each of the letters we can play
+  letters.forEach( function IttLetters (l,i,letters) {
+    // slice into new array to pass by value instead of reference.
+    var a = letters.slice();
 
     // Check if the tile is a blank tile, we will need to try everything
     if ( l == ' '){
-      a.splice(i,1) // remove the _ and continue on
-      .forEach(function(le,ind,a){
-        var ar = a.slice() // pass by value
-        ar.splice(ind,1);
-        GoOn(origin,pos,le,word,ar,NextArc(arc,le),arc);
+      a.splice(i,1); // remove the _ and continue on
+      // Itterate over the options for a blank instead of the hand.
+      x_letters.forEach(function IttBlank (le) {
+        GoOn(r, c, pos, le, word, a, NextArc(arc,le), 'blank');
       }); //valid.forEach()
     } else {
       a.splice(i,1); // remove the tile from the hand and try to play it
-      GoOn(origin,pos, l,word, a, NextArc(arc,l),arc);
+      GoOn(r,c,pos, l,word, a, NextArc(arc,l),arc,'played');
     } // if/else l = ''
   }); //hand.forEach()
 }//Gen ()
 
-function GoOn(origin,pos,l,word,hand,NewArc,OldArc){
-  // Check which direction we are moving 
-  if (pos < 0){
-    word = l + word;
-    if (NewArc){
-      if (NewArc['$'] == 1 && gd.find(word)) console.log(word);
-      //Record Play
-      //if room
-      Gen(origin, pos-1, word,hand,NewArc);
-      //end if room
-    } // if NewArc
-  } else {
+function GoOn(r, c, pos, l, word, value, mult, hand, NewArc, type){
+  // Check if play was valid. If not do nothing.
+  if (!NewArc) {
+    return false;
+  }
+
+  // Check which direction we are moving
+  // build the word in the correct direction
+  if (pos >= 0 ) {
     word = word + l;
-    if (NewArc){ // and room
-      if (NewArc['$'] == 1 && gd.find(word)) console.log(word);
-      //Record Play
-      Gen(origin,pos+1, word, hand, NewArc);
-      NewArc = NextArc(NewArc,'_');
-      if (NewArc) Gen(origin,-1,word,hand,NewArc);
-    } // if NewArc
-  } // if/else pos<=0
-}//GoOn()
+  } else {
+    word = l + word;
+  }
+
+  // If we played a letter we get to count the vaule of the letter and cross
+  // If we played a blank we only get the cross
+  // if the letter is on the board we get the value of the letter only.
+  if (type === 'played') {
+    value += board.GetValue(r, c, pos, l);
+    mult += board.WordMult(r, c, pos);
+  } else if (type === 'blank') {
+    value += board.GetValue(r, c, pos, ' ');
+    mult += board.WordMult(r, c, pos);
+  } else {
+    value += board.ltr_value[l.toUpperCase()];
+  }
+
+  // Check if the node in the GADDAG is and end of word node.
+  // If so send the word to board object to check if we need to record it.
+  if (NewArc['$'] === 1 && gd.find(word)) {
+    board.RecordPay(r,c,pos,word,mult,value);
+  }
+  // Once again check which way we are moving
+  if (pos >= 0) {
+    // Moving Right, first call gen moving one more to the right
+    // Then check if GADDAG has a node starting back at the archor and going
+    // back the other way. If so call Gen back at that position.
+    Gen(origin, pos+1, word,hand,NewArc);
+    NewArc = NextArc(NewArc,'_');
+    if (NewArc) Gen(r, c, -1, word, value, mult, hand, NewArc);
+  } else {
+    // Moving Left, just keeep chugging along.
+    Gen(r, c, pos-1, word, value, mult, hand, NewArc);
+  }
+}// GoOn end
 
 
 function main(){
