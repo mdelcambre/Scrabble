@@ -57,7 +57,7 @@ function CrossCheck(r,c,pos){
 
     for (i=0; i<word.length; i++){
       arc = NextArc(arc, word[i]);
-      if (!arc) return false;
+      if (!arc) return '';
     }
     if (up) {
       // ITERATE THROUGH EGES;
@@ -70,7 +70,15 @@ function CrossCheck(r,c,pos){
     }
     return '';
   }
-  
+  up = up.split('');
+  down = down.split('');
+  for (i=0; i<up.length; i++) {
+    arc = NextArc(arc,up[i]);
+    if (!arc) return '';
+  }
+  // Generate array of edges.
+  var letters = up_edges.filter(function CompDown (arc)
+
 }//function CrossCheck
                                                
 
